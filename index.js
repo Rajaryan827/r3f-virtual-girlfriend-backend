@@ -5,6 +5,7 @@ import voice from "elevenlabs-node";
 import express from "express";
 import { promises as fs } from "fs";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { mkdir } from 'fs/promises';
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "-");
@@ -65,6 +66,15 @@ app.use(cors({
 }));
 
 const port = process.env.PORT || 3000;
+
+// Create audios directory if it doesn't exist
+try {
+  await mkdir('audios', { recursive: true });
+} catch (err) {
+  if (err.code !== 'EEXIST') {
+    console.error('Error creating audios directory:', err);
+  }
+}
 
 // Health check endpoint
 app.get("/", (req, res) => {
