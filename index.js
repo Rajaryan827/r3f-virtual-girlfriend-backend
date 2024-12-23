@@ -14,16 +14,59 @@ const elevenLabsApiKey = process.env.ELEVEN_LABS_API_KEY;
 const voiceID = "kgG7dCoKCfLehAPWkJOE";
 
 const app = express();
+
+// Middleware to handle JSON parsing
 app.use(express.json());
+
+// Custom CORS middleware with specific headers
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'http://localhost:5174',
+    'http://localhost:3000',
+    'https://r3f-virtual-girlfriend-frontend-one.vercel.app',
+    'https://r3f-virtual-girlfriend-backend-jg5a.onrender.com'
+  ];
+
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
+// CORS middleware configuration
 app.use(cors({
-  origin: ['http://localhost:5174', 'http://localhost:3000', 'https://r3f-virtual-girlfriend-backend-jg5a.onrender.com'],
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:5174',
+      'http://localhost:3000',
+      'https://r3f-virtual-girlfriend-frontend-one.vercel.app',
+      'https://r3f-virtual-girlfriend-backend-jg5a.onrender.com'
+    ];
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // CORS preflight cache for 24 hours
 }));
 
 const port = process.env.PORT || 3000;
 
+// Health check endpoint
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
@@ -68,6 +111,7 @@ const lipSyncMessage = async (message) => {
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body.message;
+    
     if (!userMessage) {
       res.send({
         messages: [
@@ -190,6 +234,18 @@ const audioFileToBase64 = async (file) => {
     return "";
   }
 };
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send({
+    messages: [{
+      text: "An unexpected error occurred. Please try again later.",
+      facialExpression: "sad",
+      animation: "Talking_0"
+    }]
+  });
+});
 
 app.listen(port, () => {
   console.log(`Virtual Girlfriend listening on port ${port}`);
