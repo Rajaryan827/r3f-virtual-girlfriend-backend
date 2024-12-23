@@ -16,7 +16,9 @@ const voiceID = "kgG7dCoKCfLehAPWkJOE";
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: '*',
+  origin: ['http://localhost:5174', 'http://localhost:3000', 'https://r3f-virtual-girlfriend-backend-jg5a.onrender.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 const port = 3000;
